@@ -288,3 +288,10 @@ code::after,
   border: 0 !important;
   color: inherit !important;
 }
+
+/* KaTeX Boxed & Stretchy Safeguard */
+.katex .fbox,
+.katex .katex-stretchy {
+  min-width: 100%;
+}
+

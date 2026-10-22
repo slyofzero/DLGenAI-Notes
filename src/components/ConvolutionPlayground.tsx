@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Play, Pause, SkipBack, SkipForward, RotateCcw, CheckCircle2 } from "lucide-react";
 import { MNIST_SAMPLES, MNISTDigitKey, DEFAULT_DIGIT, AVAILABLE_DIGITS } from "@/lib/mnistData";
+import { MathText } from "@/components/Math";
 
 interface ConvolutionPlaygroundProps {
   mode?: "basic" | "stride" | "padding";
@@ -97,6 +98,9 @@ export default function ConvolutionPlayground({
   const H_out = Math.max(1, Math.floor((H_pad - kernelSize) / stride) + 1);
   const W_out = Math.max(1, Math.floor((W_pad - kernelSize) / stride) + 1);
   const totalSteps = H_out * W_out;
+
+  // Visual size for output canvas (proportional to spatial dimensions so size difference is obvious)
+  const outputDisplaySize = Math.max(80, Math.round((W_out / 28) * 280));
 
   // Precompute full convolution output
   const fullOutput = useMemo(() => {
@@ -261,7 +265,7 @@ export default function ConvolutionPlayground({
         }
       }
     }
-  }, [fullOutput, H_out, W_out, safeStep, outRow, outCol]);
+  }, [fullOutput, H_out, W_out, safeStep, outRow, outCol, outputDisplaySize]);
 
   // Play animation loop
   useEffect(() => {
@@ -352,7 +356,7 @@ export default function ConvolutionPlayground({
             </span>
           </div>
           <p className="text-xs text-muted mt-1">
-            Real 28×28 handwritten MNIST digit. A large {kernelSize}×{kernelSize} filter sweeps over the image to extract visual features.
+            Real 28×28 handwritten MNIST digit. Observe how the output feature map scales relative to the input image.
           </p>
         </div>
 
@@ -470,88 +474,134 @@ export default function ConvolutionPlayground({
       <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 rounded bg-pill text-xs font-mono">
         <div className="flex items-center gap-2">
           <span className="font-sans font-semibold text-label">Dimension Formula:</span>
-          <span className="text-title">
-            H_out = ⌊({H_in} - {kernelSize} + 2×{padding}) / {stride}⌋ + 1 ={" "}
-            <strong className="text-terracotta font-bold">{H_out}</strong>
-          </span>
+          <MathText
+            text={`$H_{\\text{out}} = \\lfloor (${H_in} - ${kernelSize} + 2(${padding})) / ${stride} \\rfloor + 1 =$`}
+            className="text-title"
+          />
+          <strong className="text-terracotta font-bold text-sm">{H_out}</strong>
         </div>
         <div className="text-label">
           Feature Map: <strong className="text-title">{H_out}×{W_out}</strong> ({totalSteps} values) · Step <strong className="text-terracotta">{safeStep + 1}</strong> of {totalSteps}
         </div>
       </div>
 
-      {/* Main Interactive Workspace: Input Image | Microscope | Output Feature Map */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left: Input Image Grid with High-Visibility Terracotta Receptive Window */}
-        <div className="lg:col-span-5 flex flex-col items-center space-y-2">
-          <div className="flex items-center justify-between w-full px-1">
+      {/* =========================================================================
+          ROW 1: THE IMAGES ROW (Both Images Side-by-Side & Centered)
+          Notice: Both images sit centered in their respective columns, with their
+          actual canvas widths reflecting spatial dimension differences clearly.
+          ========================================================================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start py-2">
+        {/* Left: Input Image (Centered) */}
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex items-center justify-between w-full max-w-[280px] px-1">
             <span className="text-xs font-semibold text-title">
               Input: Digit {digit} {padding > 0 && <span className="text-label font-normal">(+{padding} Pad)</span>}
             </span>
             <span className="text-[11px] font-mono text-muted">
-              {H_pad}×{W_pad} Canvas
+              {H_pad}×{W_pad} Grid
             </span>
           </div>
 
-          <div
-            className="relative border border-stone-border bg-[#101214] p-1.5 rounded shadow-inner select-none overflow-hidden"
-            style={{ width: "100%", maxWidth: "280px", aspectRatio: "1 / 1" }}
-          >
-            <canvas
-              ref={inputCanvasRef}
-              width={280}
-              height={280}
-              onClick={handleInputCanvasClick}
-              className="w-full h-full rounded cursor-crosshair [image-rendering:pixelated]"
-            />
-
-            {/* Glowing Receptive Window Overlay */}
+          <div className="h-[280px] w-full flex items-center justify-center">
             <div
-              className="absolute pointer-events-none transition-all duration-100 ease-out border-2 border-terracotta bg-terracotta/25 shadow-[0_0_15px_rgba(224,122,95,0.45)]"
-              style={{
-                top: `calc(6px + ${(windowRow / H_pad) * 100}% * (1 - 12px / 280px))`,
-                left: `calc(6px + ${(windowCol / W_pad) * 100}% * (1 - 12px / 280px))`,
-                width: `calc(${(kernelSize / W_pad) * 100}% * (1 - 12px / 280px))`,
-                height: `calc(${(kernelSize / H_pad) * 100}% * (1 - 12px / 280px))`,
-              }}
+              className="relative border border-stone-border bg-[#101214] p-1.5 rounded shadow-inner select-none overflow-hidden"
+              style={{ width: "280px", height: "280px" }}
             >
-              <div className="absolute -top-4 left-0 bg-terracotta text-white text-[9px] font-mono px-1 py-0.2 rounded-xs whitespace-nowrap shadow-xs">
-                K: {kernelSize}×{kernelSize}
+              <canvas
+                ref={inputCanvasRef}
+                width={280}
+                height={280}
+                onClick={handleInputCanvasClick}
+                className="w-full h-full rounded cursor-crosshair [image-rendering:pixelated]"
+              />
+
+              {/* Glowing Receptive Window Overlay */}
+              <div
+                className="absolute pointer-events-none transition-all duration-100 ease-out border-2 border-terracotta bg-terracotta/25 shadow-[0_0_15px_rgba(224,122,95,0.45)]"
+                style={{
+                  top: `calc(6px + ${(windowRow / H_pad) * 100}% * (1 - 12px / 280px))`,
+                  left: `calc(6px + ${(windowCol / W_pad) * 100}% * (1 - 12px / 280px))`,
+                  width: `calc(${(kernelSize / W_pad) * 100}% * (1 - 12px / 280px))`,
+                  height: `calc(${(kernelSize / H_pad) * 100}% * (1 - 12px / 280px))`,
+                }}
+              >
+                <div className="absolute -top-4 left-0 bg-terracotta text-white text-[9px] font-mono px-1 py-0.2 rounded-xs whitespace-nowrap shadow-xs">
+                  K: {kernelSize}×{kernelSize}
+                </div>
               </div>
             </div>
           </div>
-          <span className="text-[11px] text-muted text-center">
+          <span className="text-[11px] text-muted text-center font-sans">
             Sliding window at row {windowRow}, col {windowCol}
           </span>
         </div>
 
-        {/* Center: The Convolution Arithmetic Microscope */}
-        <div className="lg:col-span-3 flex flex-col space-y-3 p-3.5 rounded bg-inset border border-stone-border">
-          <div className="border-b border-stone-border pb-1.5 flex items-center justify-between">
-            <span className="text-xs font-bold text-title">Kernel × Patch</span>
-            <span className="text-[10px] font-mono text-terracotta font-semibold">
-              Output[{outRow}, {outCol}]
+        {/* Right: Output Feature Map (Centered, Physical Size Shows Spatial Shrinkage) */}
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex items-center justify-between w-full max-w-[280px] px-1">
+            <span className="text-xs font-semibold text-title">Output Feature Map</span>
+            <span className="text-[11px] font-mono text-terracotta font-semibold">
+              {H_out}×{W_out}
             </span>
           </div>
 
-          {/* Mini Kernel Weights Preview */}
-          <div className="space-y-1">
+          <div className="h-[280px] w-full flex items-center justify-center">
+            <div
+              className="relative border border-stone-border bg-[#101214] p-1.5 rounded shadow-inner select-none cursor-crosshair overflow-hidden transition-all duration-200"
+              style={{ width: `${outputDisplaySize}px`, height: `${outputDisplaySize}px` }}
+            >
+              <canvas
+                ref={outputCanvasRef}
+                width={outputDisplaySize}
+                height={outputDisplaySize}
+                onClick={handleOutputCanvasClick}
+                className="w-full h-full rounded [image-rendering:pixelated]"
+              />
+            </div>
+          </div>
+          <span className="text-[11px] text-muted text-center font-sans">
+            Click anywhere on the feature map to jump ({H_out}×{W_out})
+          </span>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          ROW 2: KERNEL INFORMATION (Split into 2 Columns Below the Images)
+          ========================================================================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-4 rounded-lg bg-inset border border-stone-border items-start">
+        {/* Column 1: Filter & Weights Matrix */}
+        <div className="space-y-3">
+          <div className="border-b border-stone-border pb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-title">1. Filter Weights</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-pill text-terracotta font-semibold">
+                {kernelSize}×{kernelSize} Matrix
+              </span>
+            </div>
+            {activeKernelObj.divisor && (
+              <span className="text-[10px] font-mono text-label bg-card px-1.5 py-0.5 rounded border border-stone-border">
+                Divisor: ÷{activeKernelObj.divisor}
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center space-y-2">
             <span className="text-[10px] uppercase tracking-wider font-semibold text-label">
-              Filter ({activeKernelObj.name})
+              {activeKernelObj.name}
             </span>
             <div
-              className="grid gap-1 bg-card p-1.5 rounded border border-stone-border text-center font-mono text-[9px]"
+              className="grid gap-1 bg-card p-2 rounded border border-stone-border text-center font-mono text-xs shadow-xs"
               style={{ gridTemplateColumns: `repeat(${kernelSize}, 1fr)` }}
             >
               {activeKernel.map((row, u) =>
                 row.map((w, v) => (
                   <div
                     key={`k-${u}-${v}`}
-                    className={`py-0.5 rounded font-bold ${
+                    className={`w-8 h-8 rounded flex items-center justify-center font-bold text-[11px] ${
                       w > 0
-                        ? "bg-teal-500/10 text-teal-600 dark:text-teal-400"
+                        ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20"
                         : w < 0
-                        ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                        ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
                         : "bg-pill text-label"
                     }`}
                   >
@@ -560,76 +610,66 @@ export default function ConvolutionPlayground({
                 ))
               )}
             </div>
+            <span className="text-[10px] text-muted text-center pt-1 font-sans">
+              This {kernelSize}×{kernelSize} weight matrix is shared across the entire image.
+            </span>
+          </div>
+        </div>
+
+        {/* Column 2: Local Dot Product Arithmetic & Result */}
+        <div className="space-y-3">
+          <div className="border-b border-stone-border pb-2 flex items-center justify-between">
+            <span className="text-xs font-bold text-title">2. Local Dot Product Arithmetic</span>
+            <span className="text-[10px] font-mono text-terracotta font-semibold bg-terracotta/10 px-2 py-0.5 rounded">
+              Output[{outRow}, {outCol}]
+            </span>
           </div>
 
-          {/* Step-by-Step Dot Product Arithmetic */}
-          <div className="space-y-1.5 text-xs">
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-label">
-              Local Dot Product
-            </span>
-            <div className="p-2 rounded bg-card border border-stone-border font-mono text-[10px] space-y-1 text-desc max-h-36 overflow-y-auto">
-              <div className="text-label text-[10px] pb-1 border-b border-stone-border">
-                ∑ (Patch Pixel × Weight):
+          <div className="space-y-2">
+            <div className="p-2.5 rounded bg-card border border-stone-border font-mono text-xs space-y-1.5 text-desc max-h-40 overflow-y-auto">
+              <div className="text-label text-[10px] pb-1 border-b border-stone-border flex justify-between">
+                <span>∑ (Patch Pixel × Weight):</span>
+                <span className="text-muted">Receptive Field</span>
               </div>
-              {currentCalc.dotProducts.slice(0, 4).map((dp, idx) => (
-                <div key={idx} className="flex justify-between items-center">
+              {currentCalc.dotProducts.slice(0, 5).map((dp, idx) => (
+                <div key={idx} className="flex justify-between items-center text-[11px]">
                   <span>
                     {dp.x} × ({dp.w})
                   </span>
-                  <span className={dp.prod >= 0 ? "text-teal-600" : "text-rose-600"}>
+                  <span
+                    className={
+                      dp.prod >= 0
+                        ? "text-teal-600 dark:text-teal-400 font-semibold"
+                        : "text-rose-600 dark:text-rose-400 font-semibold"
+                    }
+                  >
                     = {dp.prod}
                   </span>
                 </div>
               ))}
-              {currentCalc.dotProducts.length > 4 && (
-                <div className="text-[9px] text-label text-center pt-0.5">
-                  ... + {currentCalc.dotProducts.length - 4} more terms
+              {currentCalc.dotProducts.length > 5 && (
+                <div className="text-[10px] text-label text-center pt-1">
+                  ... + {currentCalc.dotProducts.length - 5} more terms
                 </div>
               )}
             </div>
 
             {/* Sum Result */}
-            <div className="pt-1 border-t border-stone-border flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center justify-between pt-1 text-xs font-mono">
               <span className="text-label">Raw Sum:</span>
-              <span className="font-bold text-title">{currentCalc.rawSum}</span>
-            </div>
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-label">Clamped:</span>
-              <span className="font-bold text-terracotta bg-terracotta/10 px-1.5 py-0.5 rounded">
+              <span className="font-bold text-title text-sm">{currentCalc.rawSum}</span>
+              <span className="text-label ml-4">Clamped Value:</span>
+              <span className="font-bold text-terracotta bg-terracotta/15 px-2 py-0.5 rounded text-sm">
                 {currentCalc.finalVal}
               </span>
             </div>
           </div>
         </div>
-
-        {/* Right: Output Feature Map Canvas */}
-        <div className="lg:col-span-4 flex flex-col items-center space-y-2">
-          <div className="flex items-center justify-between w-full px-1">
-            <span className="text-xs font-semibold text-title">Output Feature Map</span>
-            <span className="text-[11px] font-mono text-terracotta font-semibold">
-              {H_out}×{W_out}
-            </span>
-          </div>
-
-          <div
-            className="border border-stone-border bg-[#101214] p-1.5 rounded shadow-inner select-none cursor-crosshair overflow-hidden"
-            style={{ width: "100%", maxWidth: "280px", aspectRatio: "1 / 1" }}
-          >
-            <canvas
-              ref={outputCanvasRef}
-              width={280}
-              height={280}
-              onClick={handleOutputCanvasClick}
-              className="w-full h-full rounded [image-rendering:pixelated]"
-            />
-          </div>
-          <span className="text-[11px] text-muted text-center">
-            Click anywhere on the feature map to jump
-          </span>
-        </div>
       </div>
 
-      {/* Animation Playback Toolbar */}
+      {/* =========================================================================
+          ROW 3: ANIMATION PLAYBACK TOOLBAR
+          ========================================================================= */}
       <div className="pt-3 border-t border-stone-border flex flex-wrap items-center justify-between gap-3">
         {/* Playback Controls */}
         <div className="flex items-center gap-1.5">

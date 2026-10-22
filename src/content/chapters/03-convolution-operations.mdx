@@ -265,11 +265,11 @@ $$
 Combining Kernel Size ($K$), Stride ($S$), and Padding ($P$), we arrive at the unified spatial dimension equation for any 2D convolutional layer:
 
 $$
-\boxed{H_{\text{out}} = \left\lfloor \frac{H_{\text{in}} - K + 2P}{S} \right\rfloor + 1}
+H_{\text{out}} = \left\lfloor \frac{H_{\text{in}} - K + 2P}{S} \right\rfloor + 1
 $$
 
 $$
-\boxed{W_{\text{out}} = \left\lfloor \frac{W_{\text{in}} - K + 2P}{S} \right\rfloor + 1}
+W_{\text{out}} = \left\lfloor \frac{W_{\text{in}} - K + 2P}{S} \right\rfloor + 1
 $$
 
 Let's verify with our $28 \times 28$ MNIST digit, with a large $5 \times 5$ kernel ($K = 5$), unit stride ($S = 1$), and padding $P = 2$:
