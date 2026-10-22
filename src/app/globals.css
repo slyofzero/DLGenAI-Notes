@@ -219,6 +219,48 @@ code::after,
   display: none !important;
 }
 
+/* Editorial Quartz & Warm Stone Table Styles */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.75rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-stone);
+  font-size: 0.875rem;
+  background-color: var(--card-bg);
+}
+
+.prose thead {
+  background-color: var(--pill-bg);
+  border-bottom: 1px solid var(--border-stone);
+}
+
+.prose th {
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  text-align: left;
+  color: var(--title-color);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.prose td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--desc-color);
+  line-height: 1.6;
+}
+
+.prose tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.prose tbody tr:hover {
+  background-color: var(--inset-bg);
+}
+
 /* Inline code tweaks */
 .prose :not(pre) > code {
   font-family: var(--font-mono, monospace);

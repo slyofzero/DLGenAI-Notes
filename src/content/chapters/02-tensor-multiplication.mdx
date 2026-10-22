@@ -12,11 +12,10 @@ In deep learning, we hear the word **tensor** everywhere. But what actually is a
 
 At the simplest mathematical level, a tensor is just a **multidimensional grid of numbers**. The number of axes (directions) needed to index a value in the grid is called the **rank** or **order** of the tensor.
 
-```text
-Rank 0 (Scalar)   Rank 1 (Vector)      Rank 2 (Matrix)           Rank 3 (3D Tensor)
-    [ 42 ]           [ 1, 2, 3 ]       [[ 1, 2 ], [ 3, 4 ]]       [[[ 1, 2 ], ...]]]
-   (0 axes)           (1 axis)             (2 axes)                   (3 axes)
-```
+| Rank 0 (Scalar) | Rank 1 (Vector) | Rank 2 (Matrix) | Rank 3 (3D Tensor) |
+| :---: | :---: | :---: | :---: |
+| `42` | `[1, 2, 3]` | `[[1, 2], [3, 4]]` | `[[[1, 2], ...]]]` |
+| $0$ axes | $1$ axis | $2$ axes | $3$ axes |
 
 Let's trace this step-by-step from zero dimensions up to four dimensions:
 
@@ -220,16 +219,22 @@ In PyTorch, a tensor object actually consists of two separate entities:
 1. **The Storage Buffer:** A flat, contiguous block of raw numbers in RAM (or GPU VRAM).
 2. **The Tensor Metadata:** A lightweight Python/C++ header storing `shape`, `stride`, `dtype`, and `storage_offset`.
 
-```text
-Tensor Metadata Header:
-  shape:          [2, 3, 4]
-  stride:         [12, 4, 1]
-  storage_offset: 0
-         │
-         ▼
-Underlying 1D RAM Buffer:
-  [ 10, 11, 12, 13, 20, 21, 22, 23, 30, 31, 32, 33, 50, 51, 52, 53, ... ]
-```
+<div className="my-6 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg border border-stone-border bg-card not-prose">
+  <div className="space-y-1.5 p-3 rounded bg-inset border border-stone-border">
+    <div className="text-[10px] font-bold uppercase tracking-wider text-terracotta">1. Tensor Metadata Header</div>
+    <div className="font-mono text-xs text-title space-y-0.5">
+      <div>shape: [2, 3, 4]</div>
+      <div>stride: [12, 4, 1]</div>
+      <div>storage_offset: 0</div>
+    </div>
+  </div>
+  <div className="space-y-1.5 p-3 rounded bg-inset border border-stone-border">
+    <div className="text-[10px] font-bold uppercase tracking-wider text-label">2. Underlying 1D RAM Buffer</div>
+    <div className="font-mono text-xs text-title break-all">
+      [10, 11, 12, 13, 20, 21, 22, 23, 30, 31, 32, 33, 50, ...]
+    </div>
+  </div>
+</div>
 
 Because of this separation, many tensor operations are **zero-copy views**:
 

@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { compileMDX } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
@@ -15,6 +16,11 @@ import MatrixMulPlayground from "@/components/MatrixMulPlayground";
 import BroadcastingPlayground from "@/components/BroadcastingPlayground";
 import Tensor3DMemoryPlayground from "@/components/Tensor3DMemoryPlayground";
 import TensorMul3DPlayground from "@/components/TensorMul3DPlayground";
+import ConvolutionPlayground from "@/components/ConvolutionPlayground";
+import KernelFilterPlayground from "@/components/KernelFilterPlayground";
+import ConvolutionStaticFigure from "@/components/ConvolutionStaticFigure";
+import StrideVisualFigure from "@/components/StrideVisualFigure";
+import PaddingVisualFigure from "@/components/PaddingVisualFigure";
 import CodeBlock from "@/components/CodeBlock";
 
 const CONTENT_DIR = path.join(process.cwd(), "src", "content", "chapters");
@@ -63,6 +69,11 @@ const customComponents = {
   BroadcastingPlayground,
   Tensor3DMemoryPlayground,
   TensorMul3DPlayground,
+  ConvolutionPlayground,
+  KernelFilterPlayground,
+  ConvolutionStaticFigure,
+  StrideVisualFigure,
+  PaddingVisualFigure,
   CodeBlock,
   pre: CodeBlock,
 };
@@ -120,7 +131,7 @@ export async function getChapterBySlug(slug: string) {
     options: {
       parseFrontmatter: true,
       mdxOptions: {
-        remarkPlugins: [remarkMath],
+        remarkPlugins: [remarkGfm, remarkMath],
         rehypePlugins: [rehypeKatex, rehypeSlug],
       },
     },

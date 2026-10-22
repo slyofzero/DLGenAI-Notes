@@ -35,7 +35,8 @@ export default function Sidebar({
   const moduleTitles: Record<number, string> = {
     1: "Foundations & Linear Algebra",
     2: "Deep Architectures & Dynamics",
-    3: "Generative Models & Latent Spaces",
+    3: "Convolutional Neural Networks (CNNs)",
+    4: "Generative Models & Latent Spaces",
   };
 
   return (
