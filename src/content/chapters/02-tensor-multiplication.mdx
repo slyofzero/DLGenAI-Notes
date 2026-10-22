@@ -1,0 +1,259 @@
+---
+title: "Tensor Multiplications & Memory Layout"
+description: "A friendly, first-principles guide to tensors in mathematics, how tensors are multiplied in code and batched across dimensions, and how multi-dimensional tensors are mapped to contiguous memory buffers."
+chapterNumber: 1
+sectionNumber: 2
+order: 2
+---
+
+## 1. What Are Tensors in Maths?
+
+In deep learning, we hear the word **tensor** everywhere. But what actually is a tensor?
+
+At the simplest mathematical level, a tensor is just a **multidimensional grid of numbers**. The number of axes (directions) needed to index a value in the grid is called the **rank** or **order** of the tensor.
+
+```text
+Rank 0 (Scalar)   Rank 1 (Vector)      Rank 2 (Matrix)           Rank 3 (3D Tensor)
+    [ 42 ]           [ 1, 2, 3 ]       [[ 1, 2 ], [ 3, 4 ]]       [[[ 1, 2 ], ...]]]
+   (0 axes)           (1 axis)             (2 axes)                   (3 axes)
+```
+
+Let's trace this step-by-step from zero dimensions up to four dimensions:
+
+### 1. Rank 0: Scalar
+A single number with magnitude only.
+- **Example in DL:** A loss value ($L = 0.42$) or learning rate ($\eta = 0.001$).
+- **Shape in PyTorch:** `torch.tensor(42).shape` $\implies$ `torch.Size([])` ($0$ axes).
+
+### 2. Rank 1: Vector
+A 1D list of numbers representing direction, coordinates, or a collection of features.
+- **Example in DL:** A word embedding vector representing a single token in language models:
+  $$
+  \mathbf{x} = [0.24, -1.05, 0.88, \dots] \in \mathbb{R}^{768}
+  $$
+- **Shape:** `[768]` ($1$ axis).
+
+### 3. Rank 2: Matrix
+A 2D table organized into rows (horizontal) and columns (vertical).
+- **Example in DL:** The weight matrix of a linear neural network layer:
+  $$
+  W \in \mathbb{R}^{M \times K}
+  $$
+- **Shape:** `[M, K]` ($2$ axes).
+
+### 4. Rank 3: 3rd-Order Tensor
+A collection of 2D matrices stacked along a third axis (like a book made of sheets of paper).
+- **Example in DL (Language):** A batch of token sequences in an NLP model:
+  $$
+  \text{Shape} = [B, T, D] = [\text{Batch Size}, \text{Sequence Length}, \text{Embedding Dimension}]
+  $$
+- **Example in DL (Vision):** A single color image:
+  $$
+  \text{Shape} = [C, H, W] = [\text{Channels (R, G, B)}, \text{Height}, \text{Width}]
+  $$
+
+### 5. Rank 4: 4th-Order Tensor
+A collection of 3D tensors stacked together.
+- **Example in DL:** A mini-batch of color images fed into a Convolutional Neural Network (CNN):
+  $$
+  \text{Shape} = [B, C, H, W] = [\text{Batch Size}, \text{Channels}, \text{Height}, \text{Width}]
+  $$
+
+<Callout type="note" title="Rank vs Dimension: A Common Confusion">
+In casual conversation, people often say "a 512-dimensional vector". Here, <em>dimension</em> refers to the <strong>length</strong> of the vector ($512$ numbers along $1$ axis).
+
+In tensor mathematics, however, the **rank** (or **order**) refers to the **number of indices** required to look up a single element:
+- Vector $\mathbf{x}[i]$: Rank $1$ (requires $1$ index).
+- Matrix $A[i, j]$: Rank $2$ (requires $2$ indices).
+- Tensor $T[b, c, i, j]$: Rank $4$ (requires $4$ indices).
+</Callout>
+
+---
+
+## 2. Tensor Multiplication Rules & How It Works
+
+Just as with regular 2D matrices, we cannot arbitrarily multiply any two tensors together. To understand how tensors are multiplied, we build from element-wise multiplication up to batched matrix multiplications.
+
+### Element-Wise (Hadamard) Multiplication
+When two tensors have the **exact same shape**, multiplying them with `*` in PyTorch or NumPy simply multiplies each corresponding pair of numbers:
+
+$$
+C[i, j, k] = A[i, j, k] \times B[i, j, k]
+$$
+
+```python
+import torch
+
+a = torch.tensor([[1, 2], [3, 4]])
+b = torch.tensor([[5, 6], [7, 8]])
+
+# Element-wise product
+c = a * b
+print(c)
+# Output:
+# [[ 5, 12],
+#  [21, 32]]
+```
+
+### The Universal Rule for Multidimensional Multiplication
+When we perform true matrix-style multiplication on higher-order tensors using `torch.matmul` or `@`:
+
+<Callout type="tip" title="The Last-Two-Dimensions Rule">
+Tensor multiplication always performs standard 2D matrix multiplication on the <strong>last two dimensions</strong> of the tensors:
+
+$$
+(M \times K) \times (K \times N) \implies (M \times N)
+$$
+
+All leading dimensions are treated as **batch dimensions** that match between the input tensors!
+</Callout>
+
+### Batched Matrix Multiplication (`A @ B` and `torch.bmm`)
+Consider a batch of $B$ independent matrices in tensor $A$ of shape $(B, M, K)$, and a batch of $B$ matrices in tensor $B$ of shape $(B, K, N)$.
+
+Batched matrix multiplication computes $B$ separate matrix multiplications simultaneously:
+
+$$
+(B \times M \times K) \times (B \times K \times N) \implies (B \times M \times N)
+$$
+
+For every batch slice $b \in [0, B-1]$:
+
+$$
+C[b] = A[b] \times B[b]
+$$
+
+In PyTorch, the standard and most idiomatic way to multiply batched tensors is using the `@` operator (or `torch.matmul`):
+
+```python
+import torch
+
+# Batch of 4 independent matrix multiplies:
+# Each A is 3x5, each B is 5x2
+A = torch.randn(4, 3, 5)
+B = torch.randn(4, 5, 2)
+
+# 1. The idiomatic PyTorch way (recommended):
+C = A @ B
+
+# 2. Or using torch.bmm (strict 3D batch check):
+C_bmm = torch.bmm(A, B)
+
+print(C.shape) # Output: torch.Size([4, 3, 2])
+```
+
+Notice how the batch size $4$ is preserved, while the inner dimension $5$ collapses, producing $4$ result matrices of shape $3 \times 2$.
+
+<Callout type="note" title="@ vs torch.bmm">
+Both `@` and `torch.bmm` invoke the exact same high-speed hardware routines. The only difference is that `torch.bmm` is strictly guarded to 3-dimensional tensors, while `@` (`torch.matmul`) works seamlessly across 2D, 3D, and higher-order batches.
+</Callout>
+
+### Interactive 3D Tensor Multiplication Playground
+To see batched matrix multiplication in action, consider two 3D tensors:
+- **Tensor $A$** of shape $(3, 2, 4)$ ($3$ batch slices, each a $2 \times 4$ matrix)
+- **Tensor $B$** of shape $(3, 4, 2)$ ($3$ batch slices, each a $4 \times 2$ matrix)
+
+Their product produces **Tensor $C$** of shape $(3, 2, 2)$ ($3$ batch slices, each a $2 \times 2$ matrix).
+
+In the visualizer below:
+- The top area renders all three tensors as **3D cuboids at an angle**, so you can directly see the three parallel batch slices ($b = 0, 1, 2$) stacked in depth.
+- Click any slice ($b = 0, 1, 2$) on the cuboids or buttons to select that batch.
+- Below the cuboids, watch the active slice's 2D matrix multiplication ($2 \times 4$ by $4 \times 2 \to 2 \times 2$). Click any cell in **Result $C$** or click **Animate $k$** to see the dot product computed term-by-term!
+
+<TensorMul3DPlayground />
+
+---
+
+## 3. How Tensors Are Stored in Memory
+
+Now we reach the crucial connection between mathematical tensors and physical hardware.
+
+Just like with 2D matrices, **computer RAM is strictly a flat, one-dimensional line of memory addresses**. Physical memory has no concept of rows, columns, channels, or batch slices.
+
+So how does PyTorch store a 3D tensor of shape $(2, 3, 4)$ or a 4D tensor of shape $(16, 3, 224, 224)$ in a 1D memory strip?
+
+### The Generalized N-Dimensional Stride Formula
+In **Row-Major (C-contiguous)** order, elements are laid out sequentially along the last axis first, then the second-to-last axis, and so on.
+
+The **stride** along dimension $d$ represents how many memory slots to skip in flat RAM to move forward by 1 step along that axis:
+
+$$
+\text{stride}[d] = \prod_{k=d+1}^{D-1} \text{shape}[k], \quad \text{stride}[D-1] = 1
+$$
+
+For a 3D tensor of shape $(D_0, D_1, D_2) = (2, 3, 4)$:
+- **Last axis (columns, $d=2$):** $\text{stride}[2] = 1$
+- **Middle axis (rows, $d=1$):** $\text{stride}[1] = \text{shape}[2] = 4$
+- **First axis (batch, $d=0$):** $\text{stride}[0] = \text{shape}[1] \times \text{shape}[2] = 3 \times 4 = 12$
+
+So the strides for shape `(2, 3, 4)` are `(12, 4, 1)`.
+
+### Memory Offset Lookup
+To locate any element $(b, i, j)$ in flat 1D memory, the computer evaluates:
+
+$$
+\text{Memory Offset} = (b \times \text{stride}[0]) + (i \times \text{stride}[1]) + (j \times \text{stride}[2])
+$$
+
+$$
+\text{Memory Offset} = (b \times 12) + (i \times 4) + (j \times 1)
+$$
+
+For example, to find element $[1, 2, 3]$:
+$$
+\text{Offset} = (1 \times 12) + (2 \times 4) + (3 \times 1) = 12 + 8 + 3 = 23
+$$
+
+The computer jumps directly to memory index $23$ without searching!
+
+### Interactive 3D Tensor Memory Explorer
+Use the playground below to interactively explore how a 3D tensor of shape $(2, 3, 4)$ is laid out in physical RAM:
+- Click **Element** and select any number in Batch 0 or Batch 1 to see its calculated memory address.
+- Click **Batch Slice** to observe how all 12 numbers in an entire batch form one contiguous half of the memory strip.
+- Click **Row Slice** to see how all 4 numbers in a row sit adjacent to each other.
+- Click **Col Slice** to see how elements in a column jump by `stride = 4` slots across memory.
+
+<Tensor3DMemoryPlayground />
+
+### Tensor Metadata vs Physical Storage (Views vs Copies)
+In PyTorch, a tensor object actually consists of two separate entities:
+1. **The Storage Buffer:** A flat, contiguous block of raw numbers in RAM (or GPU VRAM).
+2. **The Tensor Metadata:** A lightweight Python/C++ header storing `shape`, `stride`, `dtype`, and `storage_offset`.
+
+```text
+Tensor Metadata Header:
+  shape:          [2, 3, 4]
+  stride:         [12, 4, 1]
+  storage_offset: 0
+         │
+         ▼
+Underlying 1D RAM Buffer:
+  [ 10, 11, 12, 13, 20, 21, 22, 23, 30, 31, 32, 33, 50, 51, 52, 53, ... ]
+```
+
+Because of this separation, many tensor operations are **zero-copy views**:
+
+```python
+import torch
+
+x = torch.zeros(2, 3, 4)
+
+# 1. Transpose: swaps dimensions 1 and 2
+# This does NOT move any numbers in memory!
+# It merely swaps stride[1] and stride[2] in the metadata.
+y = x.transpose(1, 2)
+print(y.shape)   # torch.Size([2, 4, 3])
+print(y.stride())  # (12, 1, 4) <- stride is swapped!
+
+# 2. Check if contiguous
+print(x.is_contiguous()) # True
+print(y.is_contiguous()) # False (stride[2] > stride[1]!)
+```
+
+<Callout type="warning" title="When is .contiguous() Required?">
+Certain operations (like `.view()`) require elements to sit in standard row-major contiguous order in physical RAM. If you try to call `.view()` on a transposed or non-contiguous tensor, PyTorch raises:
+
+`RuntimeError: view size is not compatible with input tensor's size and stride`
+
+Calling `y = y.contiguous()` allocates a fresh, contiguous memory buffer and copies the numbers over in the new order, allowing `.view()` to work smoothly.
+</Callout>

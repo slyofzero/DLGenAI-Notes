@@ -1,0 +1,248 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@import "katex/dist/katex.min.css";
+
+/* =========================================================================
+   Unified Typography Scale & Heading Presets
+   Maps utility classes (text-h1, text-h2, etc.) to dynamic runtime CSS variables.
+   ========================================================================= */
+@theme {
+  --text-h1: var(--font-size-h1);
+  --text-h1--line-height: var(--line-height-h1);
+  --text-h1-mobile: var(--font-size-h1-mobile);
+  --text-h1-mobile--line-height: var(--line-height-h1-mobile);
+
+  --text-h2: var(--font-size-h2);
+  --text-h2--line-height: var(--line-height-h2);
+  --text-h2-mobile: var(--font-size-h2-mobile);
+  --text-h2-mobile--line-height: var(--line-height-h2-mobile);
+
+  --text-h3: var(--font-size-h3);
+  --text-h3--line-height: var(--line-height-h3);
+  --text-h3-mobile: var(--font-size-h3-mobile);
+  --text-h3-mobile--line-height: var(--line-height-h3-mobile);
+
+  --text-h4: var(--font-size-h4);
+  --text-h4--line-height: var(--line-height-h4);
+  --text-h4-mobile: var(--font-size-h4-mobile);
+  --text-h4-mobile--line-height: var(--line-height-h4-mobile);
+
+  /* Semantic Color Presets (Auto Light / Dark Theme) */
+  --color-title: var(--title-color);
+  --color-body: var(--body-color);
+  --color-desc: var(--desc-color);
+  --color-muted: var(--muted-color);
+  --color-label: var(--label-color);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-hover: var(--terracotta-hover);
+  --color-terracotta-light: var(--terracotta-light);
+  --color-terracotta-blush: var(--terracotta-blush);
+
+  --color-canvas: var(--bg-stone);
+  --color-card: var(--card-bg);
+  --color-inset: var(--inset-bg);
+  --color-stone-border: var(--border-stone);
+  --color-subtle-border: var(--border-subtle);
+  --color-pill: var(--pill-bg);
+}
+
+:root {
+  /* Dynamic Typography Presets (Edit here to change heading sizes instantly) */
+  --font-size-h1: 3.5rem;
+  --line-height-h1: 1.15;
+  --font-size-h1-mobile: 2.0625rem;
+  --line-height-h1-mobile: 1.2;
+
+  --font-size-h2: 2.21rem;
+  --line-height-h2: 1.25;
+  --font-size-h2-mobile: 1.65rem;
+  --line-height-h2-mobile: 1.25;
+
+  --font-size-h3: 1.65rem;
+  --line-height-h3: 1.35;
+  --font-size-h3-mobile: 1.30rem;
+  --line-height-h3-mobile: 1.35;
+
+  --font-size-h4: 1.4rem;
+  --line-height-h4: 1.4;
+  --font-size-h4-mobile: 1.15rem;
+  --line-height-h4-mobile: 1.4;
+
+  /* Theme Palette (Light Mode) */
+  --bg-stone: #F7F6F2;
+  --card-bg: #FFFFFF;
+  --inset-bg: #FCFBF9;
+  --border-stone: #E7E5DF;
+  --border-subtle: #EDEAE2;
+  --title-color: #191C1E;
+  --body-color: #212529;
+  --desc-color: #555148;
+  --muted-color: #6A665D;
+  --label-color: #857F72;
+  --terracotta: #8C533E;
+  --terracotta-hover: #734230;
+  --terracotta-light: #F7EFEA;
+  --terracotta-blush: #DFC3B8;
+  --pill-bg: #EDEAE2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-stone: #191C1E;
+    --card-bg: #23272B;
+    --inset-bg: #1C1F21;
+    --border-stone: #33373B;
+    --border-subtle: #2A2E32;
+    --title-color: #F7F6F2;
+    --body-color: #E6E4DF;
+    --desc-color: #A8A398;
+    --muted-color: #948F84;
+    --label-color: #8E8A80;
+    --terracotta: #E07A5F;
+    --terracotta-hover: #F08E75;
+    --terracotta-light: #322420;
+    --terracotta-blush: #4A332B;
+    --pill-bg: #2C2F33;
+  }
+}
+
+body {
+  background-color: var(--bg-stone);
+  color: var(--body-color);
+  font-family: var(--font-sans), 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, .font-serif {
+  font-family: var(--font-serif), Georgia, 'Times New Roman', serif;
+}
+
+/* Scaled headings (bound directly to theme presets) */
+h1, .prose h1 {
+  font-size: var(--text-h1-mobile);
+  line-height: var(--text-h1-mobile--line-height);
+}
+@media (min-width: 640px) {
+  h1, .prose h1 {
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+  }
+}
+
+h2, .prose h2 {
+  font-size: var(--text-h2-mobile) !important;
+  line-height: var(--text-h2-mobile--line-height);
+}
+@media (min-width: 640px) {
+  h2, .prose h2 {
+    font-size: var(--text-h2) !important;
+    line-height: var(--text-h2--line-height);
+  }
+}
+
+h3, .prose h3 {
+  font-size: var(--text-h3-mobile) !important;
+  line-height: var(--text-h3-mobile--line-height);
+}
+@media (min-width: 640px) {
+  h3, .prose h3 {
+    font-size: var(--text-h3) !important;
+    line-height: var(--text-h3--line-height);
+  }
+}
+
+h4, .prose h4 {
+  font-size: var(--text-h4-mobile) !important;
+  line-height: var(--text-h4-mobile--line-height);
+}
+@media (min-width: 640px) {
+  h4, .prose h4 {
+    font-size: var(--text-h4) !important;
+    line-height: var(--text-h4--line-height);
+  }
+}
+
+h1 em, h2 em, h3 em {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  color: var(--terracotta);
+}
+
+/* Quartz-style breadcrumb & micro-labels */
+.eyebrow-label {
+  font-family: var(--font-sans), 'Segoe UI', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--label-color);
+}
+
+/* KaTeX custom academic tweaks */
+.katex-display {
+  padding: 0.85rem 0;
+  margin: 1.25rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.katex {
+  font-size: 1.06em;
+  color: inherit;
+}
+
+/* Warm minimalist scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-stone);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--label-color);
+}
+
+/* Remove default backticks from all inline code pseudo-elements */
+code::before,
+code::after,
+.prose code::before,
+.prose code::after {
+  content: "" !important;
+  display: none !important;
+}
+
+/* Inline code tweaks */
+.prose :not(pre) > code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.875em;
+  font-weight: 500;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  background-color: var(--pill-bg);
+  color: var(--terracotta);
+  border: 1px solid var(--border-stone);
+}
+
+/* Ensure pre and inner code inside prose do not get unwanted background/padding from Tailwind typography */
+.prose pre {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+.prose pre code {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  color: inherit !important;
+}
